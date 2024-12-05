@@ -10,7 +10,7 @@ db = client["stock_database"]  # Replace with your database name
 collection = db["stock_data"]  # Replace with your collection name
 
 # Load CSV Data
-df = pd.read_csv("C:\\Users\\jemis\\temp\\Streamlit\\test_mongo.csv")
+df = pd.read_csv("C:\\Users\\jemis\\temp\\Streamlit\\test_mongo_without_formula.csv")
 
 # Insert Data
 try:
