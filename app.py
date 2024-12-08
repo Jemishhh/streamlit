@@ -48,17 +48,17 @@ def style_dataframe(df):
     return df.style.applymap(highlight_percentages, subset=highlight_columns)\
                    .apply(lambda x: ['background-color: #f9f9f9' if i % 2 == 0 else '' for i in range(len(x))], axis=0)
 
-# Fetch data
 full_data = get_full_data()
 limited_data = get_limited_data()
 
 if full_data:
     full_df = pd.DataFrame(full_data).drop("_id", axis=1)
     full_df["date"] = pd.to_datetime(full_df["date"], format="%d-%m-%Y").dt.date.astype(str)  # Correct date format
+   
 
 if limited_data:
     limited_df = pd.DataFrame(limited_data).drop("_id", axis=1)
-    limited_df["date"] = pd.to_datetime(limited_df["date"], format="%d-%m-%Y").dt.date.astype(str)  # Correct date format
+    
 
     
    # Sidebar Filters
@@ -105,9 +105,6 @@ if limited_data:
     apply_button = col5.button("Apply Filters")
     clear_button = col6.button("Clear Filters")
 
-
-
-
     if clear_button:
         apply_button = False  # Reset filters
 
@@ -150,6 +147,7 @@ if limited_data:
         # Display filtered data
         if not filtered_data.empty:
             st.write(f"Showing {len(filtered_data)} filtered results:")
+            
             st.dataframe(style_dataframe(filtered_data))
         else:
             st.write("No data found for the selected filters.")
