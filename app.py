@@ -26,18 +26,39 @@ def get_limited_data():
     data = list(collection.find().limit(200))  # Limit data to 200 entries
     return data
 
-# Fetch full data for filtering and limited data for display
+# Highlight Columns
+highlight_columns = ["%_of_curr", "3m_%", "6m_%", "9m_%", "12m_%"]
+
+# Highlight percentages
+def highlight_percentages(val):
+    if pd.isnull(val):
+        return ""
+    try:
+        val = float(str(val).replace("%", ""))  # Remove '%' and convert to float
+        return "color: green;" if val > 0 else "color: red;" if val < 0 else ""
+    except ValueError:
+        return ""
+
+# Style DataFrame
+def style_dataframe(df):
+    df = df.copy()
+    for col in highlight_columns:
+        if col in df.columns:
+            df[col] = df[col].astype(str)  # Ensure all values are strings for consistency
+    return df.style.applymap(highlight_percentages, subset=highlight_columns)\
+                   .apply(lambda x: ['background-color: #f9f9f9' if i % 2 == 0 else '' for i in range(len(x))], axis=0)
+
+# Fetch data
 full_data = get_full_data()
 limited_data = get_limited_data()
 
-# Create DataFrames
 if full_data:
     full_df = pd.DataFrame(full_data).drop("_id", axis=1)
-    full_df["date"] = pd.to_datetime(full_df["date"], format="%Y-%m-%d").dt.date.astype(str)
+    full_df["date"] = pd.to_datetime(full_df["date"], format="%d-%m-%Y").dt.date.astype(str)  # Correct date format
 
 if limited_data:
     limited_df = pd.DataFrame(limited_data).drop("_id", axis=1)
-    limited_df["date"] = pd.to_datetime(limited_df["date"], format="%Y-%m-%d").dt.date.astype(str)
+    limited_df["date"] = pd.to_datetime(limited_df["date"], format="%d-%m-%Y").dt.date.astype(str)  # Correct date format
 
     # Sidebar Filters
     st.sidebar.header("Filters")
@@ -77,13 +98,18 @@ if limited_data:
     all_types = sorted(full_df["type"].unique())
     type_filter = st.sidebar.selectbox("Type", [""] + all_types)
 
-    # Apply Filters button
-    apply_button = st.sidebar.button("Apply Filters")
+    # Apply and Clear Filters buttons
+    col1, col2 = st.sidebar.columns([1, 1])
+    apply_button = col1.button("Apply Filters")
+    clear_button = col2.button("Clear Filters")
+
+    if clear_button:
+        apply_button = False  # Reset filters
 
     # Display limited data initially
     if not apply_button:
         st.write("Showing initial 200 entries (use filters to refine results):")
-        st.dataframe(limited_df)
+        st.dataframe(style_dataframe(limited_df))
     else:
         # Apply filters on the full dataset
         filtered_data = full_df
@@ -119,7 +145,7 @@ if limited_data:
         # Display filtered data
         if not filtered_data.empty:
             st.write(f"Showing {len(filtered_data)} filtered results:")
-            st.dataframe(filtered_data)
+            st.dataframe(style_dataframe(filtered_data))
         else:
             st.write("No data found for the selected filters.")
 else:
